@@ -110,7 +110,8 @@ int matrix_matrix_mult(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
                 sum += matrixA->rows[row*matrixA->width + column]*matrixB->rows[matrixB->width*column + columnB];
             }
             matrixC->rows[row*matrixC->width + columnB] = sum;
-            sum = 0;
         }
     }
+
+    return 1;
 }

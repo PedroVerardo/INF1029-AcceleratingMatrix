@@ -34,16 +34,16 @@ int main(void)
     c->height = 2;
     c->rows = (float*)malloc(sizeof(float)*c->height*c->width);
     
-    //print_matrix(a);
+    print_matrix(a);
     print_matrix(b);
 
-    scalar_matrix_mult(2.0f, b);
+    //scalar_matrix_mult(2.0f, b);
 
-    print_matrix(b);
+    //print_matrix(b);
 
-    //matrix_matrix_mult(a,b,c);
+    matrix_matrix_mult(a,b,c);
 
-    //print_matrix(c);
+    print_matrix(c);
 
     free(a->rows);
     free(a);
