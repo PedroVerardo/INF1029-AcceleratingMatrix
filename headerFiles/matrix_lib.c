@@ -12,6 +12,17 @@
 
 #include "matrix_lib.h"
 
+Matrix* matrix_init(int height, int width){
+    Matrix* new = (Matrix*)malloc(sizeof(Matrix));
+    new->width = width;
+    new->height = height;
+    new->rows = (float*)malloc(sizeof(float)*new->height*new->width);
+    for(int i = 0; i < new->height*new->width; i++){
+        new->rows[i] = 0;
+    }
+    return new;
+}
+
 void print_matrix_separation(int width)
 {
     printf("\n ");
