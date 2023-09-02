@@ -12,6 +12,29 @@
 
 #include "matrix_lib.h"
 
+int matrix_mult_validations(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC){
+
+    if(matrixA->height <= 0  || matrixA->width <= 0 || matrixB->height <= 0  || matrixB->width <= 0)
+    {
+        printf("Something wrong with your matrix width or height");
+        return 0;
+    }
+
+    if(matrixA->width != matrixB->height)
+    {
+        printf("Inconsistent shapes matrixA have %ld width and matrixB have %ld height", matrixA->width, matrixB->height);
+        return 0;
+    }
+
+    if(matrixC->height != matrixA->height || matrixC->width != matrixB->width)
+    {
+        printf("Inconsistent shape of resultant matrix the resultant have %ld width and %ld height", matrixA->height, matrixB->width);
+        return 0;
+    }
+
+    return 1;
+}
+
 Matrix* matrix_init(int height, int width){
     Matrix* new = (Matrix*)malloc(sizeof(Matrix));
     new->width = width;
@@ -91,23 +114,8 @@ int scalar_matrix_mult(float scalar_value, Matrix *matrix)
 
 int matrix_matrix_mult(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
 {
-    float sum;
-
-    if(matrixA->height <= 0  || matrixA->width <= 0 || matrixB->height <= 0  || matrixB->width <= 0)
-    {
-        printf("Something wrong with your matrix width or height");
-        return 0;
-    }
-
-    if(matrixA->width != matrixB->height)
-    {
-        printf("Inconsistent shapes matrixA have %ld width and matrixB have %ld height", matrixA->width, matrixB->height);
-        return 0;
-    }
-
-    if(matrixC->width != matrixA->height || matrixC->height != matrixB->width)
-    {
-        printf("Inconsistent shape of resultant matrix the resultant have %ld width and %ld height", matrixA->height, matrixB->width);
+    if(!matrix_mult_validations(matrixA, matrixB, matrixC)){
+        puts("Invalid matrix format!\n");
         return 0;
     }
 
@@ -115,13 +123,36 @@ int matrix_matrix_mult(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
     {
         for (int columnB = 0; columnB < matrixB->width; columnB++)
         {
-            sum = 0;
             for (int column = 0; column < matrixA->width; column++)
             {
-                sum += matrixA->rows[row*matrixA->width + column]*matrixB->rows[matrixB->width*column + columnB];
+                matrixC->rows[row*matrixC->width + columnB] += matrixA->rows[row*matrixA->width + column]
+                *
+                matrixB->rows[matrixB->width*column + columnB];
             }
-            matrixC->rows[row*matrixC->width + columnB] = sum;
         }
+    }
+
+    return 1;
+}
+
+int matrix_matrix_mult_optimized(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
+{
+    if(!matrix_mult_validations(matrixA, matrixB, matrixC)){
+        puts("Invalid matrix format!\n");
+        return 0;
+    }
+
+    int rowA, colA;
+    for(int elem = 0; elem < matrixA->height*matrixA->width; elem++){
+        for(int colB = 0; colB < matrixB->width; colB++){
+            colA = elem % matrixA->width;
+            rowA = elem / matrixA->width;
+
+            matrixC->rows[rowA * matrixC->width + colB] += matrixA->rows[elem]
+            * 
+            matrixB->rows[colA * matrixB->width + colB];
+        }
+        
     }
 
     return 1;
