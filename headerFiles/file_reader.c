@@ -42,7 +42,7 @@ Matrix* save_matrix_on_dat(const char* src, const char* dest, int width, int hei
 /* src must be a .txt file that have dimensions and floats values for a matrix.
 dest will be a binary file that has the floats of the txt matrix */
 {
-    FILE *fileDest, *fileSrc = openFile(src, "r");
+    FILE *fileDest, *fileSrc = openFile(src, "rb");
     Matrix* m = read_matrix_txt(fileSrc, height, width);
 
     fileDest = openFile(dest, "wb");

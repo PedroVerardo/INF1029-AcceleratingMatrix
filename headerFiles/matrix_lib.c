@@ -6,7 +6,7 @@
 * Prupose: Demonstrate how can matris operations can gain performance                 *
 *           with different forms of programming them.                                 *
 *                                                                                     *
-* Usage: run the command make ----- to test the gains of the matrix operations speed  *
+* Usage: run the command make to test the gains of the matrix operations speed        *
 *                                                                                     *
 \**************************************************************************************/
 
@@ -40,9 +40,7 @@ Matrix* matrix_init(int height, int width){
     new->width = width;
     new->height = height;
     new->rows = (float*)malloc(sizeof(float)*new->height*new->width);
-    for(int i = 0; i < new->height*new->width; i++){
-        new->rows[i] = 0;
-    }
+    
     return new;
 }
 

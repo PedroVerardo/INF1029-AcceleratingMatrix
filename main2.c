@@ -1,11 +1,11 @@
 #include "headerFiles/matrix_data_type.h"
 #include "headerFiles/matrix_lib.h"
 #include "headerFiles/file_reader.h"
-#include "time.h"
+#include "headerFiles/time.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <time.h>
+
 
 
 int main(void){
@@ -25,14 +25,14 @@ int main(void){
     matrix_matrix_mult(mA,mB, d);
     gettimeofday(&stop, NULL);
 
-    printf("Init time: %ld ms\n", stop.tv_usec - start.tv_usec);
+    printf("normal time: %f ms\n", timedifference_msec(start, stop));
     print_matrix(d);
 
     gettimeofday(&start2, NULL);
     matrix_matrix_mult_optimized(mA, mB, c);
     gettimeofday(&stop2, NULL);
 
-    printf("Init time: %ld ms\n", stop2.tv_usec - start2.tv_usec);
+    printf("otimized time: %f ms\n", timedifference_msec(start2, stop2));
     print_matrix(c);
 
     return 0;
