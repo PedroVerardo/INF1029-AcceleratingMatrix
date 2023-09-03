@@ -66,14 +66,14 @@ for more information about matrix object look at file @matrix_data_type.h
         Nothing
 */
 {
-    for (int row = 0; row < matrix->height; row++)
+    for (int row = 0; row < matrix->height && row < 16; row++)
     {
         printf("\n|");
-        for (int column = 0; column < matrix->width; column++)
+        for (int column = 0; column < matrix->width && column < 16; column++)
         {
             printf("%.2f |", matrix->rows[row*matrix->width + column]);
         }
-        print_matrix_separation(matrix->width);
+        //print_matrix_separation(matrix->width);
     }
     printf("\n");
 }

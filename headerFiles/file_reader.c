@@ -11,14 +11,9 @@ FILE* openFile(const char* file, const char* mode)
 
 }
 
-Matrix* read_matrix_txt(FILE* file)
+Matrix* read_matrix_txt(FILE* file, int height, int width)
 {
     Matrix * matrix;
-    int height, width;
-
-    if(fscanf(file, "%d %d\n", &height, &width) != 2){
-        perror("Invalid file format!");
-    }
 
     matrix = matrix_init(height, width);
 
@@ -43,12 +38,12 @@ Matrix* read_matrix_dat(const char* file, int height, int width)
     return m;
 }
 
-Matrix* save_matrix_on_dat(const char* src, const char* dest)
+Matrix* save_matrix_on_dat(const char* src, const char* dest, int width, int height)
 /* src must be a .txt file that have dimensions and floats values for a matrix.
 dest will be a binary file that has the floats of the txt matrix */
 {
     FILE *fileDest, *fileSrc = openFile(src, "r");
-    Matrix* m = read_matrix_txt(fileSrc);
+    Matrix* m = read_matrix_txt(fileSrc, height, width);
 
     fileDest = openFile(dest, "wb");
     write_matrix_dat(fileDest, m);

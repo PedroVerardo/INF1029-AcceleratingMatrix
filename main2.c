@@ -4,28 +4,35 @@
 #include "time.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/timeb.h>
+#include <stdint.h>
+#include <time.h>
 
 
 int main(void){
 
-    save_matrix_on_dat("matrix_A.txt", "matrix_A.dat");
-    save_matrix_on_dat("matrix_B.txt", "matrix_B.dat");
+    struct timeval start, stop, start2, stop2;
 
-    Matrix* mA = read_matrix_dat("matrix_A.dat", 3, 2);
-    Matrix* mB = read_matrix_dat("matrix_B.dat", 2, 2);
+    save_matrix_on_dat("matrixA.txt", "matrix_A.dat", 512, 512);
+    save_matrix_on_dat("matrixB.txt", "matrix_B.dat", 512, 512);
+
+    Matrix* mA = read_matrix_dat("matrix_A.dat", 512, 512);
+    Matrix* mB = read_matrix_dat("matrix_B.dat", 512, 512);
     
-    Matrix* c = matrix_init(3, 2);
-    // matrix_matrix_mult(mA,mB, c);
-    // print_matrix(c);
-
-    struct timeval start, stop, overall_t1, overall_t2;
+    Matrix* c = matrix_init(512, 512);
+    Matrix* d = matrix_init(512, 512);
 
     gettimeofday(&start, NULL);
-    matrix_matrix_mult_optimized(mA, mB, c);
+    matrix_matrix_mult(mA,mB, d);
     gettimeofday(&stop, NULL);
 
-    printf("Init time: %f ms\n", timedifference_msec(start, stop));
+    printf("Init time: %ld ms\n", stop.tv_usec - start.tv_usec);
+    print_matrix(d);
+
+    gettimeofday(&start2, NULL);
+    matrix_matrix_mult_optimized(mA, mB, c);
+    gettimeofday(&stop2, NULL);
+
+    printf("Init time: %ld ms\n", stop2.tv_usec - start2.tv_usec);
     print_matrix(c);
 
     return 0;
