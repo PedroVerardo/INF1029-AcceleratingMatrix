@@ -141,14 +141,15 @@ int matrix_matrix_mult_optimized(Matrix *matrixA, Matrix *matrixB, Matrix *matri
     }
 
     int rowA, colA;
-    for(int elem = 0; elem < matrixA->height*matrixA->width; elem++){
+    int Cpos, Bpos;
+    int qtdA = matrixA->height*matrixA->width;
+    for(int elem = 0; elem < qtdA; elem++){
+        colA = elem % matrixA->width;
+        rowA = elem / matrixA->width;
+        Cpos = rowA * matrixC->width;
+        Bpos = colA * matrixB->width;
         for(int colB = 0; colB < matrixB->width; colB++){
-            colA = elem % matrixA->width;
-            rowA = elem / matrixA->width;
-
-            matrixC->rows[rowA * matrixC->width + colB] += matrixA->rows[elem]
-            * 
-            matrixB->rows[colA * matrixB->width + colB];
+            matrixC->rows[Cpos + colB] += matrixA->rows[elem] * matrixB->rows[Bpos + colB];
         }
         
     }
