@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
+#include <cpuid.h>
 
 int main(int argc, char **argv){
     
@@ -21,8 +23,7 @@ int main(int argc, char **argv){
     char* output_matrix_a = argv[8];
     char* output_matrix_b = argv[9];
 
-    //printf("\n%f \n %d\n%d\n %d\n%d\n%s", scalar,widith_a,height_a,width_b,height_b, input_matrix_a);
-    printf("\n%s\n", input_matrix_a);
+    system("cat /proc/cpuinfo");
 
     Matrix* mA = read_matrix_dat(input_matrix_a, widith_a, height_a);
     Matrix* mB = read_matrix_dat(input_matrix_b, width_b, height_b);
@@ -30,11 +31,15 @@ int main(int argc, char **argv){
     Matrix* mC = matrix_init(height_a, width_b);
     Matrix* mD = matrix_init(height_a, width_b);
 
+    printf("MATRIX A:\n");
+    print_matrix(mA);
+    printf("MATRIX B:\n");
+    print_matrix(mB);
+
     scalar_matrix_mult(scalar, mA);
+    printf("MATRIX A depois da multiplicacao:\n");
 
     write_matrix_dat(openFile(output_matrix_a, "wb"), mA);
-
-    print_matrix(mA);   
 
     gettimeofday(&start, NULL);
     matrix_matrix_mult(mA, mB, mC);

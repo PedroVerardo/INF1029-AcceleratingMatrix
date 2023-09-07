@@ -7,12 +7,11 @@
 
 int main(void)
 {
-    Matrix* a = read_matrix_dat("src/result1.dat", 512, 512);
-    Matrix* b = read_matrix_dat("src/result2.dat", 512, 512);
-    
-    print_matrix(a);
-    printf("\n");
-    print_matrix(b);
+    save_matrix_on_dat("src/A_1024.txt", "src/A_1024.dat", 1024, 1024);
+    save_matrix_on_dat("src/B_1024.txt", "src/B_1024.dat", 1024, 1024);
+
+    save_matrix_on_dat("src/A_2048.txt", "src/A_2048.dat", 2048, 2048);
+    save_matrix_on_dat("src/B_2048.txt", "src/B_2048.dat", 2048, 2048);
 
     return 0;
 }
