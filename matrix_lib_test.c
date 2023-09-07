@@ -27,10 +27,12 @@ int main(int argc, char **argv){
     Matrix* mA = read_matrix_dat(input_matrix_a, widith_a, height_a);
     Matrix* mB = read_matrix_dat(input_matrix_b, width_b, height_b);
     
-    Matrix* mC = matrix_init(512, 512);
-    Matrix* mD = matrix_init(512, 512);
+    Matrix* mC = matrix_init(height_a, width_b);
+    Matrix* mD = matrix_init(height_a, width_b);
 
     scalar_matrix_mult(scalar, mA);
+
+    write_matrix_dat(openFile(output_matrix_a, "wb"), mA);
 
     print_matrix(mA);   
 
@@ -46,6 +48,7 @@ int main(int argc, char **argv){
     gettimeofday(&stop2, NULL);
 
     print_matrix(mD);
+    write_matrix_dat(openFile(output_matrix_b, "wb"), mD);
     printf("Multiplication linearity optimization time: %f ms\n", timedifference_msec(start2, stop2));
 
     gettimeofday(&over_all_stop, NULL);
