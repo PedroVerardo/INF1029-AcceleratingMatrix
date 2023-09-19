@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv){
     
-    struct timeval start, stop,start2,stop2, over_all_start, over_all_stop;
+    struct timeval start, stop, over_all_start, over_all_stop;
     gettimeofday(&over_all_start, NULL);
 
     float scalar = atof(argv[1]);
@@ -30,6 +30,7 @@ int main(int argc, char **argv){
     
     Matrix* mC = matrix_init(height_a, width_b);
     Matrix* mD = matrix_init(height_a, width_b);
+    Matrix* mE = matrix_init(height_a, width_b);
 
     printf("MATRIX A:\n");
     print_matrix(mA);
@@ -41,20 +42,35 @@ int main(int argc, char **argv){
 
     write_matrix_dat(openFile(output_matrix_a, "wb"), mA);
 
+    // standart matrix multiplication algorithm
     gettimeofday(&start, NULL);
     matrix_matrix_mult(mA, mB, mC);
     gettimeofday(&stop, NULL);
 
     print_matrix(mC);
-    printf("Multiplication time: %f ms\n", timedifference_msec(start, stop));
+    printf("\nMultiplication time: %f ms\n", timedifference_msec(start, stop));
+    //
 
-    gettimeofday(&start2, NULL);
+    // optimized algorithm
+    gettimeofday(&start, NULL);
     matrix_matrix_mult_optimized(mA, mB, mD);
-    gettimeofday(&stop2, NULL);
+    gettimeofday(&stop, NULL);
 
     print_matrix(mD);
     write_matrix_dat(openFile(output_matrix_b, "wb"), mD);
-    printf("Multiplication linearity optimization time: %f ms\n", timedifference_msec(start2, stop2));
+    printf("\nMultiplication linearity optimization time: %f ms\n", timedifference_msec(start, stop));
+    //
+
+    // optimized algorithm with vector instructions
+    gettimeofday(&start, NULL);
+    matrix_matrix_mult_optimized_vetorial(mA, mB, mE);
+    gettimeofday(&stop, NULL);
+
+    print_matrix(mE);
+    write_matrix_dat(openFile(output_matrix_b, "wb"), mE);
+    printf("Multiplication linearity optimization with vector instructions time: %f ms\n", 
+            timedifference_msec(start, stop));
+    //
 
     gettimeofday(&over_all_stop, NULL);
     printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));

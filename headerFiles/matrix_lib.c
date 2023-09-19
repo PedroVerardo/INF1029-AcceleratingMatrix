@@ -39,7 +39,7 @@ Matrix* matrix_init(int height, int width){
     Matrix* new = (Matrix*)malloc(sizeof(Matrix));
     new->width = width;
     new->height = height;
-    new->rows = (float*)malloc(sizeof(float)*new->height*new->width);
+    new->rows = (float*)aligned_alloc(32, sizeof(float)*new->height*new->width);
     
     return new;
 }
@@ -150,6 +150,37 @@ int matrix_matrix_mult_optimized(Matrix *matrixA, Matrix *matrixB, Matrix *matri
         Bpos = colA * matrixB->width;
         for(int colB = 0; colB < matrixB->width; colB++){
             matrixC->rows[Cpos + colB] += matrixA->rows[elem] * matrixB->rows[Bpos + colB];
+        }
+        
+    }
+
+    return 1;
+}
+
+int matrix_matrix_mult_optimized_vetorial(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
+{
+    if(!matrix_mult_validations(matrixA, matrixB, matrixC)){
+        puts("Invalid matrix format!\n");
+        return 0;
+    }
+
+    int rowA, colA;
+    int Cpos, Bpos;
+    int qtdA = matrixA->height*matrixA->width;
+    for(int elem = 0; elem < qtdA; elem++){
+        colA = elem % matrixA->width;
+        rowA = elem / matrixA->width;
+        Cpos = rowA * matrixC->width;
+        Bpos = colA * matrixB->width;
+        for(int colB = 0; colB < matrixB->width; colB += 8){
+
+            __m256 veca = _mm256_set1_ps(matrixA->rows[elem]);
+            __m256 vecb = _mm256_load_ps(&matrixB->rows[Bpos + colB]);
+            __m256 vecc = _mm256_load_ps(&matrixC->rows[Cpos + colB]);
+
+            __m256 resultReg = _mm256_fmadd_ps(veca, vecb, vecc);
+
+            _mm256_store_ps(&matrixC->rows[Cpos + colB], resultReg);
         }
         
     }
