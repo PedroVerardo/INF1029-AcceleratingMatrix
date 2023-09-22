@@ -37,9 +37,10 @@ int main(int argc, char **argv){
     printf("MATRIX B:\n");
     print_matrix(mB);
 
-    scalar_matrix_mult(scalar, mA);
+    scalar_matrix_mult_optimized_vetorial(scalar, mA);
     printf("MATRIX A depois da multiplicacao:\n");
-
+    print_matrix(mA);
+    printf("\n");
     write_matrix_dat(openFile(output_matrix_a, "wb"), mA);
 
     // standart matrix multiplication algorithm

@@ -157,6 +157,23 @@ int matrix_matrix_mult_optimized(Matrix *matrixA, Matrix *matrixB, Matrix *matri
     return 1;
 }
 
+int scalar_matrix_mult_optimized_vetorial(float scalar_value, Matrix *matrix)
+{
+    int pos;
+    __m256 veca = _mm256_set1_ps(scalar_value);
+    //next = matrix->rows;
+    for (int row = 0; row < matrix->height; row++)
+    {
+        pos = row*matrix->width;
+        for (int column = 0; column < matrix->width; column+=8)
+        {
+            __m256 vecb = _mm256_load_ps(&matrix->rows[pos+column]);
+            __m256 resultReg = _mm256_mul_ps(veca, vecb);
+            _mm256_store_ps(&matrix->rows[pos+column], resultReg);
+        }
+    }  
+}
+
 int matrix_matrix_mult_optimized_vetorial(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
 {
     if(!matrix_mult_validations(matrixA, matrixB, matrixC)){
