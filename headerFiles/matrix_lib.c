@@ -159,6 +159,12 @@ int matrix_matrix_mult_optimized(Matrix *matrixA, Matrix *matrixB, Matrix *matri
 
 int scalar_matrix_mult_optimized_vetorial(float scalar_value, Matrix *matrix)
 {
+    if (matrix->height <= 0  || matrix->width <= 0)
+    {
+        printf("Something wrong with your matrix width or height");
+        return 0;
+    }
+
     int pos;
     __m256 veca = _mm256_set1_ps(scalar_value);
     //next = matrix->rows;
@@ -172,6 +178,8 @@ int scalar_matrix_mult_optimized_vetorial(float scalar_value, Matrix *matrix)
             _mm256_store_ps(&matrix->rows[pos+column], resultReg);
         }
     }  
+
+    return 1;
 }
 
 int matrix_matrix_mult_optimized_vetorial(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC)
