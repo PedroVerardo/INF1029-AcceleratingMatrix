@@ -9,4 +9,13 @@ struct matrix{
 
 typedef struct matrix Matrix;
 
+struct matrix_multiply{
+    int final;
+    int ini;
+    Matrix* A;
+    Matrix* B;
+    Matrix* C;
+};
+typedef struct matrix_multiply Mmult;
+
 #endif /* _MARTIX_DATA_TYPE_H_ */

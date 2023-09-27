@@ -212,3 +212,56 @@ int matrix_matrix_mult_optimized_vetorial(Matrix *matrixA, Matrix *matrixB, Matr
 
     return 1;
 }
+
+
+//Functions for thread multiplication
+void* thread_multiplyer(void *data_raw)
+{
+    Mmult *data = (Mmult*)data_raw;
+    int rowA, colA;
+    int Cpos, Bpos;
+    for(int elem = data->ini; elem < data->final; elem++){
+        colA = elem % data->A->width;
+        rowA = elem / data->A->width;
+        Cpos = rowA * data->C->width;
+        Bpos = colA * data->B->width;
+        for(int colB = 0; colB < data->B->width; colB += 8){
+
+            __m256 veca = _mm256_set1_ps(data->A->rows[elem]);
+            __m256 vecb = _mm256_load_ps(&data->B->rows[Bpos + colB]);
+            __m256 vecc = _mm256_load_ps(&data->C->rows[Cpos + colB]);
+
+            __m256 resultReg = _mm256_fmadd_ps(veca, vecb, vecc);
+
+            _mm256_store_ps(&data->C->rows[Cpos + colB], resultReg);
+        }
+    }
+}
+
+
+int matrix_matrix_mult_optimized_vetorial_with_threads(int numThreads,Matrix *matrixA, Matrix *matrixB, Matrix *matrixC){
+    if(!matrix_mult_validations(matrixA, matrixB, matrixC)){
+        puts("Invalid matrix format!\n");
+        return 0;
+    }
+
+    int size = (matrixA->width*matrixA->height);
+    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t)*numThreads);
+    Mmult* thread_arguments = (Mmult*)malloc(sizeof(Mmult)*numThreads);
+    int i;
+    int tam = size/numThreads;
+    for(i = 0; i < numThreads ; i++){
+        thread_arguments[i].ini = i*tam;
+        thread_arguments[i].final = thread_arguments[i].ini + tam;
+        thread_arguments[i].A = matrixA;
+        thread_arguments[i].B = matrixB;
+        thread_arguments[i].C = matrixC;
+        pthread_create(&threads[i], NULL, thread_multiplyer, (void*) &thread_arguments[i]);
+    }
+
+    for (i = 0; i < numThreads; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    return 1;
+}
