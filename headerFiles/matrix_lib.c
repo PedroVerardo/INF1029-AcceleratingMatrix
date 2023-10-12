@@ -11,6 +11,7 @@
 \**************************************************************************************/
 
 #include "matrix_lib.h"
+int thread_num = 1;
 
 int matrix_mult_validations(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC){
 
@@ -213,6 +214,54 @@ int matrix_matrix_mult_optimized_vetorial(Matrix *matrixA, Matrix *matrixB, Matr
     return 1;
 }
 
+void set_number_threads(int num_threads)
+{
+    thread_num = num_threads;
+}
+
+void* scalar_thread_mult(void* data)
+{
+    if (matrix->height <= 0  || matrix->width <= 0)
+    {
+        printf("Something wrong with your matrix width or height");
+        return 0;
+    }
+
+    int pos;
+    __m256 veca = _mm256_set1_ps(scalar_value);
+    //next = matrix->rows;
+    for (int row = data->ini; row < scalar_thread_mult; row++)
+    {
+        pos = row*data->A->width;
+        for (int column = 0; column < matrix->width; column+=8)
+        {
+            __m256 vecb = _mm256_load_ps(&matrix->rows[pos+column]);
+            __m256 resultReg = _mm256_mul_ps(veca, vecb);
+            _mm256_store_ps(&matrix->rows[pos+column], resultReg);
+        }
+    }  
+}
+
+int scalar_matrix_mult(float scalar_value, struct matrix *matrix)
+{
+    int size = (matrixA->width*matrixA->height);
+    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t)*thread_num);
+    Mmult* thread_arguments = (Mmult*)malloc(sizeof(Mmult)*thread_num);
+    int i;
+    int tam = size/thread_num;
+    for(i = 0; i < thread_num ; i++){
+        thread_arguments[i].ini = i*tam;
+        thread_arguments[i].final = thread_arguments[i].ini + tam;
+        thread_arguments[i].scalar = scalar_value;
+        thread_arguments[i].A = matrixA;
+        thread_arguments[i].B = matrixB;
+        pthread_create(&threads[i], NULL, scalar_thread_mult, (void*) &thread_arguments[i]);
+    }
+
+    for (i = 0; i < thread_num; i++) {
+        pthread_join(threads[i], NULL);
+    }
+}
 
 //Functions for thread multiplication
 void* thread_multiplyer(void *data_raw)
@@ -239,18 +288,18 @@ void* thread_multiplyer(void *data_raw)
 }
 
 
-int matrix_matrix_mult_optimized_vetorial_with_threads(int numThreads,Matrix *matrixA, Matrix *matrixB, Matrix *matrixC){
+int matrix_matrix_mult_optimized_vetorial_with_threads(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC){
     if(!matrix_mult_validations(matrixA, matrixB, matrixC)){
         puts("Invalid matrix format!\n");
         return 0;
     }
 
     int size = (matrixA->width*matrixA->height);
-    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t)*numThreads);
-    Mmult* thread_arguments = (Mmult*)malloc(sizeof(Mmult)*numThreads);
+    pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t)*thread_num);
+    Mmult* thread_arguments = (Mmult*)malloc(sizeof(Mmult)*thread_num);
     int i;
-    int tam = size/numThreads;
-    for(i = 0; i < numThreads ; i++){
+    int tam = size/thread_num;
+    for(i = 0; i < thread_num ; i++){
         thread_arguments[i].ini = i*tam;
         thread_arguments[i].final = thread_arguments[i].ini + tam;
         thread_arguments[i].A = matrixA;
@@ -259,7 +308,7 @@ int matrix_matrix_mult_optimized_vetorial_with_threads(int numThreads,Matrix *ma
         pthread_create(&threads[i], NULL, thread_multiplyer, (void*) &thread_arguments[i]);
     }
 
-    for (i = 0; i < numThreads; i++) {
+    for (i = 0; i < thread_num; i++) {
         pthread_join(threads[i], NULL);
     }
 

@@ -12,6 +12,7 @@ typedef struct matrix Matrix;
 struct matrix_multiply{
     int final;
     int ini;
+    float scalar;
     Matrix* A;
     Matrix* B;
     Matrix* C;

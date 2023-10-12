@@ -73,7 +73,7 @@ int main(int argc, char **argv){
 //             timedifference_msec(start, stop));
 
     gettimeofday(&start, NULL);
-    matrix_matrix_mult_optimized_vetorial_with_threads(24, mA, mB, mF);
+    matrix_matrix_mult_optimized_vetorial_with_threads(mA, mB, mF);
     gettimeofday(&stop, NULL);
 
     print_matrix(mF);
