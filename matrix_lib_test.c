@@ -18,10 +18,11 @@ int main(int argc, char **argv){
     int height_a = atoi(argv[3]);
     int width_b = atoi(argv[4]);
     int height_b = atoi(argv[5]);
-    char* input_matrix_a = argv[6];
-    char* input_matrix_b = argv[7];
-    char* output_matrix_a = argv[8];
-    char* output_matrix_b = argv[9];
+    int num_threads = atoi(argv[6]);
+    char* input_matrix_a = argv[7];
+    char* input_matrix_b = argv[8];
+    char* output_matrix_a = argv[9];
+    char* output_matrix_b = argv[10];
 
     //system("cat /proc/cpuinfo");
 
@@ -33,12 +34,14 @@ int main(int argc, char **argv){
     Matrix* mE = matrix_init(height_a, width_b);
     Matrix* mF = matrix_init(height_a, width_b);
 
+    set_number_threads(num_threads);
+
     printf("MATRIX A:\n");
     print_matrix(mA);
     printf("MATRIX B:\n");
     print_matrix(mB);
 
-    scalar_matrix_mult_optimized_vetorial(scalar, mA);
+    scalar_matrix_thread_mult(scalar, mA);
     printf("MATRIX A depois da multiplicacao:\n");
     print_matrix(mA);
     printf("\n");
@@ -79,8 +82,13 @@ int main(int argc, char **argv){
     print_matrix(mF);
     printf("Multiplication THREAD optimization with vector instructions time: %f ms\n", 
             timedifference_msec(start, stop));
-    //write_matrix_dat(openFile(output_matrix_b, "wb"), mE);
-    
+
+    // write_matrix_dat(openFile(output_matrix_b, "wb"), mF);
+    int check = check_matrix(mF,30720.00);
+    if (check != 1)
+    {
+        printf("\nMultiplication is wrong\n");
+    }
     
 
     gettimeofday(&over_all_stop, NULL);

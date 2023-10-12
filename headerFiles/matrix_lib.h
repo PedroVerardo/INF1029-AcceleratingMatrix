@@ -16,7 +16,8 @@ int scalar_matrix_mult_optimized_vetorial(float scalar_value, Matrix *matrix);
 int matrix_matrix_mult_optimized_vetorial_with_threads(Matrix *matrixA, Matrix *matrixB, Matrix *matrixC);
 void print_matrix(Matrix *matrix);
 void set_number_threads(int num_threads);
-int scalar_matrix_mult(float scalar_value, struct matrix *matrix);
+int scalar_matrix_thread_mult(float scalar_value, struct matrix *matrix);
 Matrix* matrix_init(int height, int width);
+int check_matrix(Matrix* matrix, float result);
 
 #endif /* _MARTIX_OPERATIONS_H_ */

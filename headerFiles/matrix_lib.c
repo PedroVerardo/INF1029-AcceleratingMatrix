@@ -219,32 +219,25 @@ void set_number_threads(int num_threads)
     thread_num = num_threads;
 }
 
-void* scalar_thread_mult(void* data)
+void* scalar_thread_mult(void* data_raw)
 {
-    if (matrix->height <= 0  || matrix->width <= 0)
-    {
-        printf("Something wrong with your matrix width or height");
-        return 0;
-    }
-
+    Mmult *data = (Mmult*)data_raw;
     int pos;
-    __m256 veca = _mm256_set1_ps(scalar_value);
-    //next = matrix->rows;
-    for (int row = data->ini; row < scalar_thread_mult; row++)
+    __m256 veca = _mm256_set1_ps(data->scalar);
+    __m256 vecb;
+    __m256 resultReg;
+    for (pos = data->ini; pos < data->final; pos+=8)
     {
-        pos = row*data->A->width;
-        for (int column = 0; column < matrix->width; column+=8)
-        {
-            __m256 vecb = _mm256_load_ps(&matrix->rows[pos+column]);
-            __m256 resultReg = _mm256_mul_ps(veca, vecb);
-            _mm256_store_ps(&matrix->rows[pos+column], resultReg);
-        }
+        vecb = _mm256_load_ps(&data->A->rows[pos]);
+        resultReg = _mm256_mul_ps(veca, vecb);
+        _mm256_store_ps(&data->A->rows[pos], resultReg);
+
     }  
 }
 
-int scalar_matrix_mult(float scalar_value, struct matrix *matrix)
+int scalar_matrix_thread_mult(float scalar_value, struct matrix *matrix)
 {
-    int size = (matrixA->width*matrixA->height);
+    int size = (matrix->width*matrix->height);
     pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t)*thread_num);
     Mmult* thread_arguments = (Mmult*)malloc(sizeof(Mmult)*thread_num);
     int i;
@@ -253,8 +246,7 @@ int scalar_matrix_mult(float scalar_value, struct matrix *matrix)
         thread_arguments[i].ini = i*tam;
         thread_arguments[i].final = thread_arguments[i].ini + tam;
         thread_arguments[i].scalar = scalar_value;
-        thread_arguments[i].A = matrixA;
-        thread_arguments[i].B = matrixB;
+        thread_arguments[i].A = matrix;
         pthread_create(&threads[i], NULL, scalar_thread_mult, (void*) &thread_arguments[i]);
     }
 
@@ -312,5 +304,20 @@ int matrix_matrix_mult_optimized_vetorial_with_threads(Matrix *matrixA, Matrix *
         pthread_join(threads[i], NULL);
     }
 
+    return 1;
+}
+
+int check_matrix(Matrix* matrix, float result)
+{
+    int tam = matrix->height * matrix->width;
+    for( int i = 0; i < tam; i++ ) {
+        if (matrix->rows[i] == result)
+        {
+            continue;
+        }
+        else{
+            return 0;
+        }
+    }
     return 1;
 }
