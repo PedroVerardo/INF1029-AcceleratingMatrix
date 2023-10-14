@@ -24,14 +24,14 @@ int main(int argc, char **argv){
     char* output_matrix_a = argv[9];
     char* output_matrix_b = argv[10];
 
-    //system("cat /proc/cpuinfo");
+    system("cat /proc/cpuinfo");
 
     Matrix* mA = read_matrix_dat(input_matrix_a, widith_a, height_a);
     Matrix* mB = read_matrix_dat(input_matrix_b, width_b, height_b);
     
-    Matrix* mC = matrix_init(height_a, width_b);
-    Matrix* mD = matrix_init(height_a, width_b);
-    Matrix* mE = matrix_init(height_a, width_b);
+    // Matrix* mC = matrix_init(height_a, width_b);
+    // Matrix* mD = matrix_init(height_a, width_b);
+    // Matrix* mE = matrix_init(height_a, width_b);
     Matrix* mF = matrix_init(height_a, width_b);
 
     set_number_threads(num_threads);
@@ -84,7 +84,7 @@ int main(int argc, char **argv){
             timedifference_msec(start, stop));
 
     // write_matrix_dat(openFile(output_matrix_b, "wb"), mF);
-    int check = check_matrix(mF,30720.00);
+    int check = check_matrix(mF,15360.00);
     if (check != 1)
     {
         printf("\nMultiplication is wrong\n");

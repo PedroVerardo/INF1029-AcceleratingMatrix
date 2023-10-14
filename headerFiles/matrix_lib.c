@@ -232,11 +232,18 @@ void* scalar_thread_mult(void* data_raw)
         resultReg = _mm256_mul_ps(veca, vecb);
         _mm256_store_ps(&data->A->rows[pos], resultReg);
 
-    }  
+    }
+    return NULL;
 }
 
 int scalar_matrix_thread_mult(float scalar_value, struct matrix *matrix)
 {
+    if (matrix->height <= 0  || matrix->width <= 0)
+    {
+        printf("Something wrong with your matrix width or height");
+        return 0;
+    }
+
     int size = (matrix->width*matrix->height);
     pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t)*thread_num);
     Mmult* thread_arguments = (Mmult*)malloc(sizeof(Mmult)*thread_num);
@@ -253,6 +260,8 @@ int scalar_matrix_thread_mult(float scalar_value, struct matrix *matrix)
     for (i = 0; i < thread_num; i++) {
         pthread_join(threads[i], NULL);
     }
+
+    return 1;
 }
 
 //Functions for thread multiplication
@@ -277,6 +286,7 @@ void* thread_multiplyer(void *data_raw)
             _mm256_store_ps(&data->C->rows[Cpos + colB], resultReg);
         }
     }
+    return NULL;
 }
 
 
