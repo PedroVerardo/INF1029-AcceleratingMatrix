@@ -20,9 +20,9 @@ Como executar:
             gcc -mfma -Wall main2.c headerFiles/matrix_lib.c headerFiles/file_reader.c headerFiles/time.c -o main2
             ./main2
 
-Para executar com a main definida no "matrix_lib_test.c", execute no terminal o comando "make". Vale destacar que, esse aquivo "file_reader.c" 
-foi criado para conter as funções para gerenciar os arquivos necessários para obter as matrizes, enquanto os outros, seguem a especificação 
-proposta.
+Para executar com a main definida no "matrix_lib_test.c", execute no terminal o comando "make". Deixamos, nele, o parâmetro para executar com 
+16 threads. Vale destacar que, esse aquivo "file_reader.c" foi criado para conter as funções para gerenciar os arquivos necessários para obter 
+as matrizes, enquanto os outros, seguem a especificação proposta.
 
 Resultados para as matrizes de 2048:
 
