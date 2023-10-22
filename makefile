@@ -6,3 +6,7 @@ test:
 	clear
 	gcc -mfma -Wall main2.c headerFiles/matrix_lib.c headerFiles/file_reader.c headerFiles/time.c -o main2
 	./main2
+nv:
+	clear
+	nvcc -o teste hello.cu timer.c
+	./teste
