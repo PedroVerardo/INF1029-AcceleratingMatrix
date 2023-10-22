@@ -1,8 +1,12 @@
+#include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cuda_runtime.h>
+#include <stdint.h>
+#include <string.h>
+#include <cpuid.h>
 extern "C" {
 #include "timer.h"
+#include "headerFiles/matrix_data_type.h"
 }
 
 #define DATASET_SIZE 1024000

@@ -1,6 +1,47 @@
 #include "file_reader.h"
 #include <stdlib.h>
 
+Matrix* matrix_init(int height, int width){
+    Matrix* new = (Matrix*)malloc(sizeof(Matrix));
+    new->width = width;
+    new->height = height;
+    new->rows = (float*)aligned_alloc(32, sizeof(float)*new->height*new->width);
+    
+    return new;
+}
+
+void print_matrix_separation(int width)
+{
+    printf("\n ");
+    for(int i=0; i < width; i++)
+    {
+        printf("----- ");
+    }
+}
+
+void print_matrix(Matrix *matrix)
+/*This is a simple function to print all elements of a matrix object,
+for more information about matrix object look at file @matrix_data_type.h
+
+    Args:
+        matrix: A matrix object
+    
+    Returns:
+        Nothing
+*/
+{
+    for (int row = 0; row < matrix->height && row < 16; row++)
+    {
+        printf("\n|");
+        for (int column = 0; column < matrix->width && column < 16; column++)
+        {
+            printf("%.2f |", matrix->rows[row*matrix->width + column]);
+        }
+        //print_matrix_separation(matrix->width);
+    }
+    printf("\n");
+}
+
 FILE* openFile(const char* file, const char* mode)
 {
     FILE* f = fopen(file, mode);
