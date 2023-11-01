@@ -8,40 +8,44 @@ extern "C" {
 #include "timer.h"
 #include "headerFiles/matrix_data_type.h"
 #include "headerFiles/file_reader.h"
+#include "matrix_lib.h"
 }
 
-__global__ 
-void add(int n, float *d_x, float *d_y)
-{
-}
-
-__global__ 
-void mult(int n, float* value, float *d_y)
-{
-    int id = blockIdx.x*blockDim.x+threadIdx.x;
-    int stride = gridDim.x*blockDim.x;
-    // Make sure we do not go out of bounds
-    for(int i = id; i < n; i+= stride){
-        if(id < n){
-            d_y[i] = (*value) * d_y[i];
-        }
-    }
-}
+// __global__ 
+// void mult(int n, float* value, float *d_y)
+// {
+//     int id = blockIdx.x*blockDim.x+threadIdx.x;
+//     int stride = gridDim.x*blockDim.x;
+//     // Make sure we do not go out of bounds
+//     for(int i = id; i < n; i+= stride){
+//         if(id < n){
+//             d_y[i] = (*value) * d_y[i];
+//         }
+//     }
+// }
 
 __global__
 void matrixMult(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
 {
     int rowA, colA;
     int Cpos, Bpos;
-
     int id = blockIdx.x*blockDim.x+threadIdx.x;
-
-    colA = id % tam;
-    rowA = id / tam;
-    Cpos = rowA * tam;
-    Bpos = colA * tam;
-    for(int colB = 0; colB < tam; colB++){
-         d_matrixC[Cpos + colB] += d_matrixA[id] * d_matrixB[Bpos + colB];
+    int row=blockIdx.x*blockDim.x+threadIdx.x;
+    int col=blockIdx.y*blockDim.y+threadIdx.y;
+    int stride = gridDim.x*blockDim.x;
+    
+    for(int i = id; i < n; i+= stride){
+        colA = i % tam;
+        rowA = i / tam;
+        Cpos = rowA * tam;
+        Bpos = colA * tam;
+        
+        // for(int colB = 0; colB < tam; colB++){
+        //     d_matrixC[Cpos + colB] += d_matrixA[i] * d_matrixB[Bpos + colB];
+        // }
+        for(int colB = 0; colB < tam; colB++){
+            d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
+        }
     }
 }
 
@@ -85,20 +89,23 @@ int main(int argc, char **argv){
     cudaMemcpy(d_scalar, &scalar, sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_x, mA->rows, tamA*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_y, mB->rows, tamB*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_c, mC->rows, tamC*sizeof(float), cudaMemcpyHostToDevice);
 
     int blockSize = 256;
     int gridSize = 4096;
 
-    gettimeofday(&over_all_start, NULL);
+    // gettimeofday(&over_all_start, NULL);
 
-    mult<<<gridSize, blockSize>>>(tamA, d_scalar, d_x);
-    cudaDeviceSynchronize();
+    // mult<<<gridSize, blockSize>>>(tamA, d_scalar, d_x);
+    // cudaDeviceSynchronize();
 
-    gettimeofday(&over_all_stop, NULL);
+    // gettimeofday(&over_all_stop, NULL);
     
-    cudaMemcpy(mA->rows, d_x, tamA*sizeof(float), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(mA->rows, d_x, tamA*sizeof(float), cudaMemcpyDeviceToHost);
 
-    matrixMult<<<gridSize, blockSize>>>(tamC, d_x, d_y, d_c, tamC);
+    scalar_matrix_mult_gpu(tamA, mA, d_scalar, d_x);
+
+    matrixMult<<<gridSize, blockSize>>>(tamC, d_x, d_y, d_c, 2048);
     cudaDeviceSynchronize();
 
     cudaMemcpy(mC->rows, d_c, tamC*sizeof(float), cudaMemcpyDeviceToHost);
@@ -111,7 +118,7 @@ int main(int argc, char **argv){
     print_matrix(mC);
     printf("\n");
 
-    printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));
+    //printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));
 
     cudaFree(d_x);
     cudaFree(d_y);

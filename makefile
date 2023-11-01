@@ -8,6 +8,6 @@ test:
 	./main2
 nv:
 	clear
-	@nvcc -o teste main.cu timer.c headerFiles/file_reader.c
+	@nvcc -o teste matrix_lib_teste.cu timer.c headerFiles/file_reader.c matrix_lib.cu
 	@./teste 5.0 2048 2048 2048 2048 16 src/A_2048.dat src/B_2048.dat src/result1.dat src/result2.dat
 	@rm teste
