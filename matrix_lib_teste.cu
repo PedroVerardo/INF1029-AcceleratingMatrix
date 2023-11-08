@@ -24,30 +24,30 @@ extern "C" {
 //     }
 // }
 
-__global__
-void matrixMult(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
-{
-    int rowA, colA;
-    int Cpos, Bpos;
-    int id = blockIdx.x*blockDim.x+threadIdx.x;
-    int row=blockIdx.x*blockDim.x+threadIdx.x;
-    int col=blockIdx.y*blockDim.y+threadIdx.y;
-    int stride = gridDim.x*blockDim.x;
+// __global__
+// void matrixMult(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
+// {
+//     int rowA, colA;
+//     int Cpos, Bpos;
+//     int id = blockIdx.x*blockDim.x+threadIdx.x;
+//     int row=blockIdx.x*blockDim.x+threadIdx.x;
+//     int col=blockIdx.y*blockDim.y+threadIdx.y;
+//     int stride = gridDim.x*blockDim.x;
     
-    for(int i = id; i < n; i+= stride){
-        colA = i % tam;
-        rowA = i / tam;
-        Cpos = rowA * tam;
-        Bpos = colA * tam;
+//     for(int i = id; i < n; i+= stride){
+//         colA = i % tam;
+//         rowA = i / tam;
+//         Cpos = rowA * tam;
+//         Bpos = colA * tam;
         
-        // for(int colB = 0; colB < tam; colB++){
-        //     d_matrixC[Cpos + colB] += d_matrixA[i] * d_matrixB[Bpos + colB];
-        // }
-        for(int colB = 0; colB < tam; colB++){
-            d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
-        }
-    }
-}
+//         // for(int colB = 0; colB < tam; colB++){
+//         //     d_matrixC[Cpos + colB] += d_matrixA[i] * d_matrixB[Bpos + colB];
+//         // }
+//         for(int colB = 0; colB < tam; colB++){
+//             d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
+//         }
+//     }
+// }
 
 
 int main(int argc, char **argv){
@@ -62,11 +62,13 @@ int main(int argc, char **argv){
     int height_a = atoi(argv[3]);
     int width_b = atoi(argv[4]);
     int height_b = atoi(argv[5]);
-    int num_threads = atoi(argv[6]);
-    char* input_matrix_a = argv[7];
-    char* input_matrix_b = argv[8];
-    char* output_matrix_a = argv[9];
-    char* output_matrix_b = argv[10];
+    int num_threads_block = atoi(argv[6]);
+    int num_block_grid = atoi(argv[7]);
+    int num_max_memory = atoi(argv[8]);
+    char* input_matrix_a = argv[9];
+    char* input_matrix_b = argv[10];
+    char* output_matrix_a = argv[11];
+    char* output_matrix_b = argv[12];
     
     Matrix* mA = read_matrix_dat(input_matrix_a, widith_a, height_a);
     Matrix* mB = read_matrix_dat(input_matrix_b, width_b, height_b);
@@ -85,38 +87,26 @@ int main(int argc, char **argv){
     cudaMalloc(&d_x, tamA*sizeof(float));
     cudaMalloc(&d_y, tamB*sizeof(float));
     cudaMalloc(&d_c, tamC*sizeof(float));
-    cudaMalloc(&d_scalar, sizeof(float));
-    cudaMemcpy(d_scalar, &scalar, sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_x, mA->rows, tamA*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_y, mB->rows, tamB*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_c, mC->rows, tamC*sizeof(float), cudaMemcpyHostToDevice);
 
     int blockSize = 256;
     int gridSize = 4096;
 
-    // gettimeofday(&over_all_start, NULL);
-
-    // mult<<<gridSize, blockSize>>>(tamA, d_scalar, d_x);
-    // cudaDeviceSynchronize();
-
-    // gettimeofday(&over_all_stop, NULL);
-    
-    // cudaMemcpy(mA->rows, d_x, tamA*sizeof(float), cudaMemcpyDeviceToHost);
-
-    scalar_matrix_mult_gpu(tamA, mA, d_scalar, d_x);
-
-    matrixMult<<<gridSize, blockSize>>>(tamC, d_x, d_y, d_c, 2048);
-    cudaDeviceSynchronize();
-
-    cudaMemcpy(mC->rows, d_c, tamC*sizeof(float), cudaMemcpyDeviceToHost);
+    scalar_matrix_mult_gpu(tamA, mA, scalar, d_x);
 
     printf("MATRIX A depois da multiplicacao:\n");
     print_matrix(mA);
     printf("\n");
+
+    // matrixMult<<<gridSize, blockSize>>>(tamC, d_x, d_y, d_c, 2048);
+    // cudaDeviceSynchronize();
+
+    // cudaMemcpy(mC->rows, d_c, tamC*sizeof(float), cudaMemcpyDeviceToHost);
     
-    printf("MATRIX C depois da multiplicacao:\n");
-    print_matrix(mC);
-    printf("\n");
+    // printf("MATRIX C depois da multiplicacao:\n");
+    // print_matrix(mC);
+    // printf("\n");
 
     //printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));
 
