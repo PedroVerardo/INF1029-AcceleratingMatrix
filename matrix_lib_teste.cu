@@ -42,8 +42,6 @@ int main(int argc, char **argv){
     printf("MATRIX B:\n");
     print_matrix(mB);
 
-    int blockSize = 256;
-    int gridSize = 4096;
     int tamA = mA->height*mA->width;
     int tamB = mB->height*mB->width;
     int tamC = mC->height*mC->width;
@@ -51,13 +49,15 @@ int main(int argc, char **argv){
     // scalar multi
     cudaMalloc(&mA->d_rows, sizeof(float) * tamA);
     cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
+    //set_grid_size(num_threads_block,num_block_grid);
+    set_grid_size(1024,10000);
     scalar_matrix_mult_gpu(tamA, mA, scalar);
 
     printf("MATRIX AFTER SCALAR MULTIPLICATION:\n");
     print_matrix(mA);
 
     // matrix multi 
-    gettimeofday(&start, NULL);
+    
     cudaMalloc(&mB->d_rows, sizeof(float) * tamB);
     cudaMemcpy(mB->d_rows, mB->h_rows, sizeof(float) * tamB, cudaMemcpyHostToDevice);
     if(allocation_type == FULL_ALLOC){
@@ -65,7 +65,9 @@ int main(int argc, char **argv){
         cudaMalloc(&mC->d_rows, sizeof(float) * tamC);
         cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
         cudaMemcpy(mC->d_rows, mC->h_rows, sizeof(float) * tamC, cudaMemcpyHostToDevice);
+        gettimeofday(&start, NULL);
         matrix_matrix_mult_gpu(tamA, mA, mB, mC);
+        gettimeofday(&stop, NULL);
         cudaMemcpy(mC->h_rows, mC->d_rows, sizeof(float) * tamC, cudaMemcpyDeviceToHost);
     }
     else{
@@ -79,7 +81,7 @@ int main(int argc, char **argv){
         }
         
     }
-    gettimeofday(&stop, NULL);
+    
     printf("Multiplication time: %f ms with %s allocation\n", 
             timedifference_msec(start, stop), allocation_type == FULL_ALLOC ? "full" : "partial");
 
@@ -89,6 +91,19 @@ int main(int argc, char **argv){
     printf("\n");
 
     gettimeofday(&over_all_stop, NULL);
+
+    int tam = mC->height * mC->width;
+    for( int i = 0; i < tam; i++ ) {
+        if (mC->h_rows[i] == 15360.00)
+        {
+            continue;
+        }
+        else{
+            printf("error\n");
+            break;
+        }
+    }
+    printf("ok\n");
 
     printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));
 

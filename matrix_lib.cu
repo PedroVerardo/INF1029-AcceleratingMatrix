@@ -10,28 +10,37 @@ int THREAD_NUMBER_PER_GRID = 4096;
 __global__
 void matrixMult(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
 {
-    int rowA, colA;
-    int Cpos, Bpos;
+    int colA;
+    int Bpos;
     int id = blockIdx.x*blockDim.x+threadIdx.x;
-    int row=blockIdx.x*blockDim.x+threadIdx.x;
-    int col=blockIdx.y*blockDim.y+threadIdx.y;
     int stride = gridDim.x*blockDim.x;
-    
-    for(int i = id; i < n; i+= stride){
-        colA = i % tam;
-        rowA = i / tam;
-        Cpos = rowA * tam;
-        Bpos = colA * tam;
-        
-        // for(int colB = 0; colB < tam; colB++){
-        //     d_matrixC[Cpos + colB] += d_matrixA[i] * d_matrixB[Bpos + colB];
-        // }
-        for(int colB = 0; colB < tam; colB++){
-            d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
+    if(id < n){
+        for(int i = id; i < n; i+= stride){
+            colA = i % tam;
+            Bpos = colA * tam;
+            
+            for(int colB = 0; colB < tam; colB++){
+                d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
+            }
         }
     }
+    
 }
 
+__global__
+void matrixMult2(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
+{
+    int Bpos;
+    int id = blockIdx.x*blockDim.x+threadIdx.x;
+    if(id < n){
+        Bpos = id % tam * tam;
+            
+        for(int colB = 0; colB < tam; ++colB){
+            d_matrixC[id] += d_matrixA[id] * d_matrixB[Bpos + colB];
+        }
+    }
+    
+}
 
 __global__ 
 void mult(int n, float value, float *d_y)
@@ -58,6 +67,8 @@ int set_grid_size(int threads_per_block, int max_blocks_per_grid)
     }
     THREAD_NUMBER_GPU = threads_per_block;
     THREAD_NUMBER_PER_GRID = max_blocks_per_grid;
+
+    printf("numero de threads: %d\n", THREAD_NUMBER_GPU);
     return 1;
 }
 
@@ -82,11 +93,25 @@ int scalar_matrix_mult_gpu(int tam, matrixGpu* mA, float d_scalar)
 int matrix_matrix_mult_gpu(int tam, matrixGpu* mA, matrixGpu* mB, matrixGpu* mC)
 {
     matrixMult<<<THREAD_NUMBER_PER_GRID, THREAD_NUMBER_GPU>>>(tam, mA->d_rows, mB->d_rows, mC->d_rows, mC->width);
-    cudaError_t error = cudaDeviceSynchronize();
-    if(error)
-    {
-        return 0;
-    }
+    // cudaError_t error = cudaDeviceSynchronize();
+    // if(error)
+    // {
+    //     return 0;
+    // }
+    
+    return 1;
+}
+
+int matrix_matrix_mult_gpu2(int tam, matrixGpu* mA, matrixGpu* mB, matrixGpu* mC)
+{
+    int tnpg = 1024;
+    int grid = tam/tnpg;
+    matrixMult2<<<tnpg, grid>>>(tam, mA->d_rows, mB->d_rows, mC->d_rows, mC->width);
+    // cudaError_t error = cudaDeviceSynchronize();
+    // if(error)
+    // {
+    //     return 0;
+    // }
     
     return 1;
 }
