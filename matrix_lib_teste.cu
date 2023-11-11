@@ -5,57 +5,14 @@
 #include <string.h>
 #include <cpuid.h>
 extern "C" {
-#include "timer.h"
-#include "headerFiles/matrix_data_type.h"
-#include "headerFiles/file_reader.h"
+#include "headerFiles/time.h"
 #include "matrix_lib.h"
 }
 
-// __global__ 
-// void mult(int n, float* value, float *d_y)
-// {
-//     int id = blockIdx.x*blockDim.x+threadIdx.x;
-//     int stride = gridDim.x*blockDim.x;
-//     // Make sure we do not go out of bounds
-//     for(int i = id; i < n; i+= stride){
-//         if(id < n){
-//             d_y[i] = (*value) * d_y[i];
-//         }
-//     }
-// }
-
-// __global__
-// void matrixMult(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
-// {
-//     int rowA, colA;
-//     int Cpos, Bpos;
-//     int id = blockIdx.x*blockDim.x+threadIdx.x;
-//     int row=blockIdx.x*blockDim.x+threadIdx.x;
-//     int col=blockIdx.y*blockDim.y+threadIdx.y;
-//     int stride = gridDim.x*blockDim.x;
-    
-//     for(int i = id; i < n; i+= stride){
-//         colA = i % tam;
-//         rowA = i / tam;
-//         Cpos = rowA * tam;
-//         Bpos = colA * tam;
-        
-//         // for(int colB = 0; colB < tam; colB++){
-//         //     d_matrixC[Cpos + colB] += d_matrixA[i] * d_matrixB[Bpos + colB];
-//         // }
-//         for(int colB = 0; colB < tam; colB++){
-//             d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
-//         }
-//     }
-// }
-
-
 int main(int argc, char **argv){
     struct timeval start, stop, over_all_start, over_all_stop;
-    float *d_x;
-    float *d_y;
-    float *d_c;
     
+    gettimeofday(&over_all_start, NULL);
     const float scalar = atof(argv[1]);
     int widith_a = atoi(argv[2]);
     int height_a = atoi(argv[3]);
@@ -69,50 +26,71 @@ int main(int argc, char **argv){
     char* output_matrix_a = argv[11];
     char* output_matrix_b = argv[12];
     
-    Matrix* mA = read_matrix_dat(input_matrix_a, widith_a, height_a);
-    Matrix* mB = read_matrix_dat(input_matrix_b, width_b, height_b);
-    Matrix* mC = matrix_init(height_a, width_b);
+    matrixGpu* mA = read_matrix_dat(input_matrix_a, widith_a, height_a);
+    matrixGpu* mB = read_matrix_dat(input_matrix_b, width_b, height_b);
+    matrixGpu* mC = matrix_init(height_a, width_b);
+
+    int allocation_type = allocation_is_possible(num_max_memory, mA, mB);
+    mA->alloc_mode = allocation_type;
+    mC->alloc_mode = allocation_type;
+    mB->alloc_mode = FULL_ALLOC;
+
+    printf("Allocation type selected: %s\n", allocation_type == FULL_ALLOC ? "full allocation" : "partial allocation");
     
     printf("MATRIX A:\n");
     print_matrix(mA);
     printf("MATRIX B:\n");
     print_matrix(mB);
 
-    //gpu
+    int blockSize = 256;
+    int gridSize = 4096;
     int tamA = mA->height*mA->width;
     int tamB = mB->height*mB->width;
     int tamC = mC->height*mC->width;
 
-    cudaMalloc(&d_x, tamA*sizeof(float));
-    cudaMalloc(&d_y, tamB*sizeof(float));
-    cudaMalloc(&d_c, tamC*sizeof(float));
-    cudaMemcpy(d_x, mA->rows, tamA*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_y, mB->rows, tamB*sizeof(float), cudaMemcpyHostToDevice);
+    // scalar multi
+    cudaMalloc(&mA->d_rows, sizeof(float) * tamA);
+    cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
+    scalar_matrix_mult_gpu(tamA, mA, scalar);
 
-    int blockSize = 256;
-    int gridSize = 4096;
+    printf("MATRIX AFTER SCALAR MULTIPLICATION:\n");
+    print_matrix(mA);
 
-    scalar_matrix_mult_gpu(tamA, mA, scalar, d_x);
+    // matrix multi 
+    gettimeofday(&start, NULL);
+    cudaMalloc(&mB->d_rows, sizeof(float) * tamB);
+    cudaMemcpy(mB->d_rows, mB->h_rows, sizeof(float) * tamB, cudaMemcpyHostToDevice);
+    if(allocation_type == FULL_ALLOC){
+        cudaMalloc(&mA->d_rows, sizeof(float) * tamA);
+        cudaMalloc(&mC->d_rows, sizeof(float) * tamC);
+        cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
+        cudaMemcpy(mC->d_rows, mC->h_rows, sizeof(float) * tamC, cudaMemcpyHostToDevice);
+        matrix_matrix_mult_gpu(tamA, mA, mB, mC);
+        cudaMemcpy(mC->h_rows, mC->d_rows, sizeof(float) * tamC, cudaMemcpyDeviceToHost);
+    }
+    else{
+        cudaMalloc(&mA->d_rows, sizeof(float) * mA->width);
+        cudaMalloc(&mC->d_rows, sizeof(float) * mC->width);
+        for(int i = 0; i < mA->height; i++){
+            cudaMemcpy(mA->d_rows, mA->h_rows + i*mA->width, sizeof(float) * mA->width, cudaMemcpyHostToDevice);
+            cudaMemcpy(mC->d_rows, mC->h_rows + i*mC->width, sizeof(float) * mC->width, cudaMemcpyHostToDevice);
+            matrix_matrix_mult_gpu(mA->width, mA, mB, mC);
+            cudaMemcpy(mC->h_rows + i * mC->width, mC->d_rows, sizeof(float) * mC->width, cudaMemcpyDeviceToHost);
+        }
+        
+    }
+    gettimeofday(&stop, NULL);
+    printf("Multiplication time: %f ms with %s allocation\n", 
+            timedifference_msec(start, stop), allocation_type == FULL_ALLOC ? "full" : "partial");
+
 
     printf("MATRIX A depois da multiplicacao:\n");
-    print_matrix(mA);
+    print_matrix(mC);
     printf("\n");
 
-    matrix_matrix_mult_gpu(tamC, mA, mB, mC);
+    gettimeofday(&over_all_stop, NULL);
 
-    // matrixMult<<<gridSize, blockSize>>>(tamC, d_x, d_y, d_c, 2048);
-    // cudaDeviceSynchronize();
+    printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));
 
-    // cudaMemcpy(mC->rows, d_c, tamC*sizeof(float), cudaMemcpyDeviceToHost);
-    
-    // printf("MATRIX C depois da multiplicacao:\n");
-    // print_matrix(mC);
-    // printf("\n");
-
-    //printf("Overall time: %f ms\n", timedifference_msec(over_all_start, over_all_stop));
-
-    cudaFree(d_x);
-    cudaFree(d_y);
-    cudaFree(d_c);
     return 0;
 }

@@ -1,6 +1,5 @@
 
 extern "C" {
-    #include "headerFiles/matrix_data_type.h"
     #include "matrix_lib.h"
     #include <stdio.h>
 }
@@ -62,17 +61,17 @@ int set_grid_size(int threads_per_block, int max_blocks_per_grid)
     return 1;
 }
 
-int scalar_matrix_mult_gpu(int tam,Matrix* mA,float d_scalar,float* d_x)
+int scalar_matrix_mult_gpu(int tam, matrixGpu* mA, float d_scalar)
 {
 
-    mult<<<THREAD_NUMBER_PER_GRID, THREAD_NUMBER_GPU>>>(tam, d_scalar, d_x);
+    mult<<<THREAD_NUMBER_PER_GRID, THREAD_NUMBER_GPU>>>(tam, d_scalar, mA->d_rows);
     cudaError_t error = cudaDeviceSynchronize();
     if(error)
     {
         return 0;
     }
     
-    error = cudaMemcpy(mA->rows, d_x, tam*sizeof(float), cudaMemcpyDeviceToHost);
+    error = cudaMemcpy(mA->h_rows, mA->d_rows, tam*sizeof(float), cudaMemcpyDeviceToHost);
     if(error)
     {
         return 0;
@@ -89,26 +88,22 @@ int matrix_matrix_mult_gpu(int tam, matrixGpu* mA, matrixGpu* mB, matrixGpu* mC)
         return 0;
     }
     
-    error = cudaMemcpy(mC->rows, mC->d_rows, tam*sizeof(float), cudaMemcpyDeviceToHost);
-    if(error)
-    {
-        return 0;
-    }
     return 1;
 }
 
 int allocation_is_possible(int max_memory, matrixGpu* mA, matrixGpu* mB)
 {
+    long long bytes = max_memory * 1000000;
     int partial_allocation_tot = (mB->height*mB->width + mA->width + mB->height)*4;
     int allocation_tot = (mB->height*mB->width + mA->width*mA->height + mA->height*mB->width)*4;
-    if(max_memory > allocation_tot)
+    if(bytes > allocation_tot)
     {
-        return 1;
+        return FULL_ALLOC;
     }
 
-    else if(max_memory > partial_allocation_tot)
+    else if(bytes > partial_allocation_tot)
     {
-        return 0;
+        return PARTIAL_ALLOC;
     }
 
     else
