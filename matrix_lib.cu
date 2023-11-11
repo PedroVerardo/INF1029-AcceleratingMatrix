@@ -80,9 +80,20 @@ int scalar_matrix_mult_gpu(int tam,Matrix* mA,float d_scalar,float* d_x)
     return 1;
 }
 
-int matrix_matrix_mult_gpu(int tam, matrixGpu* d_mA, matrixGpu* d_mB, matrixGpu* d_mC, matrixGpu* h_mC)
+int matrix_matrix_mult_gpu(int tam, matrixGpu* mA, matrixGpu* mB, matrixGpu* mC)
 {
-
+    matrixMult<<<THREAD_NUMBER_PER_GRID, THREAD_NUMBER_GPU>>>(tam, mA->d_rows, mB->d_rows, mC->d_rows, mC->width);
+    cudaError_t error = cudaDeviceSynchronize();
+    if(error)
+    {
+        return 0;
+    }
+    
+    error = cudaMemcpy(mC->rows, mC->d_rows, tam*sizeof(float), cudaMemcpyDeviceToHost);
+    if(error)
+    {
+        return 0;
+    }
     return 1;
 }
 

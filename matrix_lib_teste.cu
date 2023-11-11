@@ -55,7 +55,6 @@ int main(int argc, char **argv){
     float *d_x;
     float *d_y;
     float *d_c;
-    float *d_scalar;
     
     const float scalar = atof(argv[1]);
     int widith_a = atoi(argv[2]);
@@ -99,6 +98,8 @@ int main(int argc, char **argv){
     print_matrix(mA);
     printf("\n");
 
+    matrix_matrix_mult_gpu(tamC, mA, mB, mC);
+
     // matrixMult<<<gridSize, blockSize>>>(tamC, d_x, d_y, d_c, 2048);
     // cudaDeviceSynchronize();
 
@@ -113,6 +114,5 @@ int main(int argc, char **argv){
     cudaFree(d_x);
     cudaFree(d_y);
     cudaFree(d_c);
-    cudaFree(d_scalar);
     return 0;
 }
