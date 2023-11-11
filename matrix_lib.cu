@@ -10,15 +10,13 @@ int THREAD_NUMBER_PER_GRID = 4096;
 __global__
 void matrixMult(int n, float *d_matrixA, float *d_matrixB, float *d_matrixC, int tam)
 {
-    int colA;
     int Bpos;
     int id = blockIdx.x*blockDim.x+threadIdx.x;
     int stride = gridDim.x*blockDim.x;
     if(id < n){
         for(int i = id; i < n; i+= stride){
-            colA = i % tam;
-            Bpos = colA * tam;
-            
+            Bpos = i % tam * tam;
+            d_matrixC[i] = 0.0;
             for(int colB = 0; colB < tam; colB++){
                 d_matrixC[i] += d_matrixA[i] * d_matrixB[Bpos + colB];
             }

@@ -65,7 +65,6 @@ int main(int argc, char **argv){
         cudaMalloc(&mA->d_rows, sizeof(float) * tamA);
         cudaMalloc(&mC->d_rows, sizeof(float) * tamC);
         cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
-        cudaMemcpy(mC->d_rows, mC->h_rows, sizeof(float) * tamC, cudaMemcpyHostToDevice);
         matrix_matrix_mult_gpu(tamA, mA, mB, mC);
         cudaMemcpy(mC->h_rows, mC->d_rows, sizeof(float) * tamC, cudaMemcpyDeviceToHost);
     }
@@ -76,9 +75,8 @@ int main(int argc, char **argv){
         int offset;
         for(int i = 0, offset = 0; i < mA->height; i++, offset += mA->width){
             cudaMemcpy(mA->d_rows, mA->h_rows + offset, size, cudaMemcpyHostToDevice);
-            cudaMemcpy(mC->d_rows, mC->h_rows + offset, size, cudaMemcpyHostToDevice);
             matrix_matrix_mult_gpu(mA->width, mA, mB, mC);
-            cudaMemcpy(mC->h_rows + i * mC->width, mC->d_rows, size, cudaMemcpyDeviceToHost);
+            cudaMemcpy(mC->h_rows + offset, mC->d_rows, size, cudaMemcpyDeviceToHost);
         }
         
     }
@@ -96,7 +94,7 @@ int main(int argc, char **argv){
 
     int tam = mC->height * mC->width;
     for( int i = 0; i < tam; i++ ) {
-        if (mC->h_rows[i] == 30720.00)
+        if (mC->h_rows[i] == 15360.00)
         {
             continue;
         }
