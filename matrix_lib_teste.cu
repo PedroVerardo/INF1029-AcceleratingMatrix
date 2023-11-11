@@ -72,11 +72,13 @@ int main(int argc, char **argv){
     else{
         cudaMalloc(&mA->d_rows, sizeof(float) * mA->width);
         cudaMalloc(&mC->d_rows, sizeof(float) * mC->width);
-        for(int i = 0; i < mA->height; i++){
-            cudaMemcpy(mA->d_rows, mA->h_rows + i*mA->width, sizeof(float) * mA->width, cudaMemcpyHostToDevice);
-            cudaMemcpy(mC->d_rows, mC->h_rows + i*mC->width, sizeof(float) * mC->width, cudaMemcpyHostToDevice);
+        int size = sizeof(float) * mA->width;
+        int offset;
+        for(int i = 0, offset = 0; i < mA->height; i++, offset += mA->width){
+            cudaMemcpy(mA->d_rows, mA->h_rows + offset, size, cudaMemcpyHostToDevice);
+            cudaMemcpy(mC->d_rows, mC->h_rows + offset, size, cudaMemcpyHostToDevice);
             matrix_matrix_mult_gpu(mA->width, mA, mB, mC);
-            cudaMemcpy(mC->h_rows + i * mC->width, mC->d_rows, sizeof(float) * mC->width, cudaMemcpyDeviceToHost);
+            cudaMemcpy(mC->h_rows + i * mC->width, mC->d_rows, size, cudaMemcpyDeviceToHost);
         }
         
     }
