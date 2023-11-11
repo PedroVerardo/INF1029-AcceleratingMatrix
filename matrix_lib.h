@@ -27,4 +27,3 @@ void write_matrix_dat(FILE* file, matrixGpu* matrix);
 matrixGpu* read_matrix_dat(const char* file, int height, int width);
 matrixGpu* save_matrix_on_dat(const char* src, const char* dest, int width, int height);
 void print_matrix(matrixGpu *matrix);
-int matrix_matrix_mult_gpu2(int tam, matrixGpu* mA, matrixGpu* mB, matrixGpu* mC);

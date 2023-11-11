@@ -9,5 +9,5 @@ test:
 nv:
 	clear
 	@nvcc -o teste matrix_lib_teste.cu headerFiles/time.c matrix_lib.cu matrix_lib.c
-	@./teste 5.0 1024 1024 1024 1024 256 4096 60 src/A_1024.dat src/B_1024.dat src/result1.dat src/result2.dat
+	@./teste 5.0 1024 1024 1024 1024 256 4096 7 src/A_1024.dat src/B_1024.dat src/result1.dat src/result2.dat
 	@rm teste

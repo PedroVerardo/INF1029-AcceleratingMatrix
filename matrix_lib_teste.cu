@@ -58,6 +58,7 @@ int main(int argc, char **argv){
 
     // matrix multi 
     
+    gettimeofday(&start, NULL);
     cudaMalloc(&mB->d_rows, sizeof(float) * tamB);
     cudaMemcpy(mB->d_rows, mB->h_rows, sizeof(float) * tamB, cudaMemcpyHostToDevice);
     if(allocation_type == FULL_ALLOC){
@@ -65,9 +66,7 @@ int main(int argc, char **argv){
         cudaMalloc(&mC->d_rows, sizeof(float) * tamC);
         cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
         cudaMemcpy(mC->d_rows, mC->h_rows, sizeof(float) * tamC, cudaMemcpyHostToDevice);
-        gettimeofday(&start, NULL);
         matrix_matrix_mult_gpu(tamA, mA, mB, mC);
-        gettimeofday(&stop, NULL);
         cudaMemcpy(mC->h_rows, mC->d_rows, sizeof(float) * tamC, cudaMemcpyDeviceToHost);
     }
     else{
@@ -81,6 +80,7 @@ int main(int argc, char **argv){
         }
         
     }
+    gettimeofday(&stop, NULL);
     
     printf("Multiplication time: %f ms with %s allocation\n", 
             timedifference_msec(start, stop), allocation_type == FULL_ALLOC ? "full" : "partial");
@@ -94,7 +94,7 @@ int main(int argc, char **argv){
 
     int tam = mC->height * mC->width;
     for( int i = 0; i < tam; i++ ) {
-        if (mC->h_rows[i] == 15360.00)
+        if (mC->h_rows[i] == 30720.00)
         {
             continue;
         }
