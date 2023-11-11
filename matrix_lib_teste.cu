@@ -12,6 +12,7 @@ extern "C" {
 int main(int argc, char **argv){
     struct timeval start, stop, over_all_start, over_all_stop;
     
+    // system("cat /proc/cpuinfo");
     gettimeofday(&over_all_start, NULL);
     const float scalar = atof(argv[1]);
     int widith_a = atoi(argv[2]);
@@ -58,14 +59,15 @@ int main(int argc, char **argv){
 
     // matrix multi 
     
-    gettimeofday(&start, NULL);
     cudaMalloc(&mB->d_rows, sizeof(float) * tamB);
     cudaMemcpy(mB->d_rows, mB->h_rows, sizeof(float) * tamB, cudaMemcpyHostToDevice);
     if(allocation_type == FULL_ALLOC){
         cudaMalloc(&mA->d_rows, sizeof(float) * tamA);
         cudaMalloc(&mC->d_rows, sizeof(float) * tamC);
         cudaMemcpy(mA->d_rows, mA->h_rows, sizeof(float) * tamA, cudaMemcpyHostToDevice);
+        gettimeofday(&start, NULL);
         matrix_matrix_mult_gpu(tamA, mA, mB, mC);
+        gettimeofday(&stop, NULL);
         cudaMemcpy(mC->h_rows, mC->d_rows, sizeof(float) * tamC, cudaMemcpyDeviceToHost);
     }
     else{
@@ -75,12 +77,13 @@ int main(int argc, char **argv){
         int offset;
         for(int i = 0, offset = 0; i < mA->height; i++, offset += mA->width){
             cudaMemcpy(mA->d_rows, mA->h_rows + offset, size, cudaMemcpyHostToDevice);
+            gettimeofday(&start, NULL);
             matrix_matrix_mult_gpu(mA->width, mA, mB, mC);
+            gettimeofday(&stop, NULL);
             cudaMemcpy(mC->h_rows + offset, mC->d_rows, size, cudaMemcpyDeviceToHost);
         }
         
     }
-    gettimeofday(&stop, NULL);
     
     printf("Multiplication time: %f ms with %s allocation\n", 
             timedifference_msec(start, stop), allocation_type == FULL_ALLOC ? "full" : "partial");
@@ -89,6 +92,9 @@ int main(int argc, char **argv){
     printf("MATRIX A depois da multiplicacao:\n");
     print_matrix(mC);
     printf("\n");
+
+    write_matrix_dat(openFile("src/matrix_A.dat", "w"), mA);
+    write_matrix_dat(openFile("src/matrix_C.dat", "w"), mC);
 
     gettimeofday(&over_all_stop, NULL);
 
